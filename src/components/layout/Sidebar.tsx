@@ -118,7 +118,7 @@ export default function Sidebar() {
                   </div>
                 )}
                 <div className="ml-3 overflow-hidden">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate" title={profile?.displayName}>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate" title={profile?.displayName || undefined}>
                     {profile?.displayName}
                   </p>
                   <p className="text-xs text-blue-600 dark:text-blue-400 capitalize">

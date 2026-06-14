@@ -12,6 +12,7 @@ interface UserProfile {
   email: string | null;
   role: UserRole;
   displayName: string | null;
+  photoURL?: string | null;
 }
 
 interface AuthContextType {
@@ -46,6 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               email: firebaseUser.email,
               role: data.role as UserRole,
               displayName: data.displayName || firebaseUser.displayName,
+              photoURL: data.photoURL || firebaseUser.photoURL,
             });
           } else {
             // Default profile if not found in Firestore
@@ -54,6 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               email: firebaseUser.email,
               role: 'viewer', // default role
               displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
             });
           }
         } catch (error) {
