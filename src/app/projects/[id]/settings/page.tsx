@@ -21,7 +21,8 @@ export default function ProjectSettingsPage({
   const [status, setStatus] = useState<'active' | 'completed'>('active');
   
   // Client Access State
-  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [viewerUsers, setViewerUsers] = useState<UserProfile[]>([]);
   const [selectedClient, setSelectedClient] = useState('');
   const [clientPerms, setClientPerms] = useState<ClientAccessPermissions>({ overview: true, tasks: false, documents: false });
 
@@ -39,8 +40,9 @@ export default function ProjectSettingsPage({
           setDescription(data.description);
           setStatus(data.status);
         }
-        const allUsers = await getAllUsers();
-        setUsers(allUsers.filter(u => u.role === 'viewer'));
+        const fetchedUsers = await getAllUsers();
+        setAllUsers(fetchedUsers);
+        setViewerUsers(fetchedUsers.filter(u => u.role === 'viewer'));
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -222,7 +224,7 @@ export default function ProjectSettingsPage({
                 className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white sm:text-sm"
               >
                 <option value="">-- Choose a viewer --</option>
-                {users.map(u => (
+                {viewerUsers.map(u => (
                   <option key={u.id} value={u.id}>{u.displayName} ({u.email})</option>
                 ))}
               </select>
@@ -271,11 +273,11 @@ export default function ProjectSettingsPage({
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {Object.entries(project.clientAccess).map(([clientId, perms]) => {
-                  const u = users.find(x => x.id === clientId);
+                  const u = allUsers.find(x => x.id === clientId);
                   return (
                     <tr key={clientId}>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        {u ? u.displayName : clientId}
+                        {u ? u.displayName : `Deleted User (${clientId.substring(0, 8)}...)`}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <input type="checkbox" checked={perms.overview} onChange={(e) => handleUpdateClientPerm(clientId, { ...perms, overview: e.target.checked })} className="rounded text-blue-600" />
