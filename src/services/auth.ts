@@ -19,8 +19,8 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
   const userDocSnap = await getDoc(userDocRef);
 
   if (!userDocSnap.exists()) {
-    // If it's the specific admin email, make them admin, otherwise viewer
-    const role: UserRole = user.email?.toLowerCase() === 'pablo.da.ber@gmail.com' ? 'admin' : 'viewer';
+    // If it's the specific admin email, make them admin, otherwise pending
+    const role: UserRole = user.email?.toLowerCase() === 'pablo.da.ber@gmail.com' ? 'admin' : 'pending';
 
     // Create user profile in Firestore
     await setDoc(userDocRef, {
