@@ -1,11 +1,22 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { logoutUser } from '../../services/auth';
 
 export default function PendingPage() {
   const { profile } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8">
@@ -20,7 +31,7 @@ export default function PendingPage() {
             Pendiente de Autorización
           </h2>
           <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-            Hola <span className="font-semibold text-gray-900 dark:text-gray-200">{profile?.displayName}</span>, tu cuenta ha sido creada exitosamente pero está en espera de ser aprobada por un administrador.
+            Hola <span className="font-semibold text-gray-900 dark:text-gray-200">{profile?.displayName || 'Usuario'}</span>, tu cuenta ha sido creada exitosamente pero está en espera de ser aprobada por un administrador.
           </p>
           <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md border border-blue-100 dark:border-blue-800">
             <p className="text-sm text-blue-800 dark:text-blue-300">
@@ -31,7 +42,7 @@ export default function PendingPage() {
         
         <div className="pt-4">
           <button
-            onClick={() => logoutUser()}
+            onClick={handleLogout}
             className="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
             Cerrar sesión
