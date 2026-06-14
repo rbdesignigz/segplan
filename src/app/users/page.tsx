@@ -115,6 +115,7 @@ export default function UsersPage() {
                       <option value="admin">Admin</option>
                       <option value="manager">Manager</option>
                       <option value="viewer">Viewer</option>
+                      <option value="pending" disabled>Pending (Awaiting Approval)</option>
                     </select>
                   </td>
                 </tr>

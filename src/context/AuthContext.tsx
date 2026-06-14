@@ -5,7 +5,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
-export type UserRole = 'admin' | 'manager' | 'contractor' | 'viewer';
+export type UserRole = 'admin' | 'manager' | 'contractor' | 'viewer' | 'pending';
 
 interface UserProfile {
   uid: string;
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setProfile({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
-              role: 'viewer', // default role
+              role: 'pending', // default role changed to pending
               displayName: firebaseUser.displayName,
               photoURL: firebaseUser.photoURL,
             });

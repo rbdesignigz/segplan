@@ -8,16 +8,20 @@ import { useAuth } from '../../context/AuthContext';
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   
-  const publicRoutes = ['/', '/login', '/register'];
+  const publicRoutes = ['/', '/login', '/register', '/pending'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   useEffect(() => {
     if (!loading && !user && !isPublicRoute) {
       router.push('/login');
+    } else if (!loading && user && profile?.role === 'pending' && pathname !== '/pending') {
+      router.push('/pending');
+    } else if (!loading && user && profile && profile.role !== 'pending' && pathname === '/pending') {
+      router.push('/dashboard');
     }
-  }, [user, loading, isPublicRoute, router]);
+  }, [user, profile, loading, isPublicRoute, pathname, router]);
 
   if (loading) {
     return (
@@ -29,6 +33,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   // If not logged in and on a protected route, render nothing until redirect happens
   if (!user && !isPublicRoute) {
+    return null;
+  }
+
+  // If pending and not on the pending page, render nothing until redirect happens
+  if (user && profile?.role === 'pending' && pathname !== '/pending') {
     return null;
   }
 
