@@ -20,6 +20,7 @@ export interface Task {
   description: string;
   status: TaskStatus;
   assigneeIds: string[]; // Changed from assigneeId to an array
+  color?: string; // Pastel background color
   attachments?: TaskAttachment[];
   createdAt: string;
   createdBy: string;
@@ -30,7 +31,8 @@ export const createTask = async (
   title: string, 
   description: string, 
   assigneeIds: string[], 
-  uid: string
+  uid: string,
+  color?: string
 ): Promise<string> => {
   const newTask = {
     projectId,
@@ -38,6 +40,7 @@ export const createTask = async (
     description,
     status: 'todo' as TaskStatus,
     assigneeIds,
+    color: color || 'default',
     createdAt: Timestamp.now().toDate().toISOString(),
     createdBy: uid,
   };
@@ -67,9 +70,11 @@ export const updateTaskStatus = async (taskId: string, status: TaskStatus): Prom
   await updateDoc(docRef, { status });
 };
 
-export const updateTaskDetails = async (taskId: string, title: string, description: string): Promise<void> => {
+export const updateTaskDetails = async (taskId: string, title: string, description: string, color?: string): Promise<void> => {
   const docRef = doc(db, 'tasks', taskId);
-  await updateDoc(docRef, { title, description });
+  const updates: any = { title, description };
+  if (color) updates.color = color;
+  await updateDoc(docRef, updates);
 };
 
 export const uploadTaskAttachment = async (

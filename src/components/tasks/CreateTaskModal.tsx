@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createTask } from '../../services/tasks';
 import { useAuth } from '../../context/AuthContext';
 import { getAllUsers, UserProfile } from '../../services/users';
+import { PASTEL_COLORS } from '../../utils/colors';
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export default function CreateTaskModal({ isOpen, onClose, projectId }: CreateTa
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
+  const [color, setColor] = useState<string>('default');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,11 +42,13 @@ export default function CreateTaskModal({ isOpen, onClose, projectId }: CreateTa
         title, 
         description, 
         assigneeIds, 
-        user.uid
+        user.uid,
+        color
       );
       setTitle('');
       setDescription('');
       setAssigneeIds([]);
+      setColor('default');
       onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to create task');
@@ -101,6 +105,23 @@ export default function CreateTaskModal({ isOpen, onClose, projectId }: CreateTa
                       className="block w-full mt-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 border"
                       placeholder="Details about the task"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Card Color
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {PASTEL_COLORS.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setColor(c.id)}
+                          className={`w-8 h-8 rounded-full border-2 transition-transform ${c.bg} ${color === c.id ? 'border-blue-500 scale-110' : 'border-transparent hover:scale-110'}`}
+                          title={c.id}
+                          aria-label={`Select ${c.id} color`}
+                        />
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

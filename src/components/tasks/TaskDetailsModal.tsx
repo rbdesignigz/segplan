@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { Task, updateTaskDetails, uploadTaskAttachment, deleteTaskAttachment, TaskAttachment } from '../../services/tasks';
 import { useAuth } from '../../context/AuthContext';
+import { PASTEL_COLORS } from '../../utils/colors';
 
 interface TaskDetailsModalProps {
   task: Task | null;
@@ -16,6 +17,7 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [color, setColor] = useState('default');
   
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -26,6 +28,7 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
     if (task && isOpen) {
       setTitle(task.title);
       setDescription(task.description);
+      setColor(task.color || 'default');
       setIsEditing(false);
     }
   }, [task, isOpen]);
@@ -34,7 +37,7 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
 
   const handleSaveDetails = async () => {
     try {
-      await updateTaskDetails(task.id, title, description);
+      await updateTaskDetails(task.id, title, description, color);
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update task details", error);
@@ -109,6 +112,23 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
                       onChange={(e) => setDescription(e.target.value)}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm bg-white dark:bg-gray-700 border px-3 py-2 text-gray-900 dark:text-white"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Card Color
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {PASTEL_COLORS.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setColor(c.id)}
+                          className={`w-8 h-8 rounded-full border-2 transition-transform ${c.bg} ${color === c.id ? 'border-blue-500 scale-110' : 'border-transparent hover:scale-110'}`}
+                          title={c.id}
+                          aria-label={`Select ${c.id} color`}
+                        />
+                      ))}
+                    </div>
                   </div>
                   <div className="flex space-x-3">
                     <button onClick={handleSaveDetails} className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none">

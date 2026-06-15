@@ -6,6 +6,7 @@ import { UserProfile, getAllUsers } from '../../services/users';
 import AssigneePopover from './AssigneePopover';
 import TaskDetailsModal from './TaskDetailsModal';
 import { useAuth } from '../../context/AuthContext';
+import { getTaskColorClasses } from '../../utils/colors';
 
 interface KanbanBoardProps {
   projectId: string;
@@ -119,10 +120,12 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
             </div>
 
             <div className="flex-1 space-y-3">
-              {columnTasks.map(task => (
+              {columnTasks.map(task => {
+                const colorClasses = getTaskColorClasses(task.color);
+                return (
                 <div 
                   key={task.id} 
-                  className={`bg-white dark:bg-gray-800 p-4 rounded shadow-sm border border-gray-200 dark:border-gray-700 transition-shadow relative ${!isViewer ? 'hover:shadow-md cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
+                  className={`${colorClasses.bg} p-4 rounded shadow-sm border ${colorClasses.border} transition-shadow relative ${!isViewer ? 'hover:shadow-md cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
                   onClick={() => setSelectedTask(task)}
                   draggable={!isViewer}
                   onDragStart={(e) => !isViewer && handleDragStart(e, task.id)}
@@ -214,7 +217,7 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
                     )}
                   </div>
                 </div>
-              ))}
+              )})}
               
               {columnTasks.length === 0 && (
                 <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
