@@ -28,6 +28,8 @@ export interface Task {
   status: TaskStatus;
   assigneeIds: string[]; // Changed from assigneeId to an array
   color?: string; // Pastel background color
+  startDate?: string; // ISO date string YYYY-MM-DD
+  endDate?: string; // ISO date string YYYY-MM-DD
   checklist?: TaskChecklistItem[];
   attachments?: TaskAttachment[];
   createdAt: string;
@@ -86,6 +88,14 @@ export const updateTaskDetails = async (taskId: string, title: string, descripti
   const docRef = doc(db, 'tasks', taskId);
   const updates: any = { title, description };
   if (color) updates.color = color;
+  await updateDoc(docRef, updates);
+};
+
+export const updateTaskDates = async (taskId: string, startDate?: string, endDate?: string): Promise<void> => {
+  const docRef = doc(db, 'tasks', taskId);
+  const updates: any = {};
+  if (startDate !== undefined) updates.startDate = startDate;
+  if (endDate !== undefined) updates.endDate = endDate;
   await updateDoc(docRef, updates);
 };
 

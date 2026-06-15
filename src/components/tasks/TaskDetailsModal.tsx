@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Task, updateTaskDetails, uploadTaskAttachment, deleteTaskAttachment, TaskAttachment, TaskChecklistItem, updateTaskChecklist } from '../../services/tasks';
+import { Task, updateTaskDetails, updateTaskDates, uploadTaskAttachment, deleteTaskAttachment, TaskAttachment, TaskChecklistItem, updateTaskChecklist } from '../../services/tasks';
 import { useAuth } from '../../context/AuthContext';
 import { PASTEL_COLORS } from '../../utils/colors';
 
@@ -17,6 +17,8 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('default');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   
   const [checklist, setChecklist] = useState<TaskChecklistItem[]>([]);
   const [newItemText, setNewItemText] = useState('');
@@ -32,6 +34,8 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
       setTitle(task.title);
       setDescription(task.description);
       setColor(task.color || 'default');
+      setStartDate(task.startDate || '');
+      setEndDate(task.endDate || '');
       setChecklist(task.checklist || []);
       setNewItemText('');
     }
@@ -45,6 +49,16 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
         await updateTaskDetails(task.id, title, description, color);
       } catch (error) {
         console.error("Failed to update task details", error);
+      }
+    }
+  };
+
+  const handleSaveDates = async () => {
+    if (startDate !== (task.startDate || '') || endDate !== (task.endDate || '')) {
+      try {
+        await updateTaskDates(task.id, startDate || undefined, endDate || undefined);
+      } catch (error) {
+        console.error("Failed to update task dates", error);
       }
     }
   };
@@ -217,6 +231,28 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
                       ))}
                     </div>
                   </div>
+                  <div className="flex flex-col sm:flex-row gap-4 mt-4 ml-1">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Start Date</label>
+                      <input 
+                        type="date" 
+                        value={startDate} 
+                        onChange={(e) => setStartDate(e.target.value)}
+                        onBlur={handleSaveDates}
+                        className="w-full text-sm text-gray-900 dark:text-white bg-transparent border border-transparent hover:border-gray-200 dark:hover:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded p-1.5 -ml-1.5 transition-colors outline-none"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">End Date</label>
+                      <input 
+                        type="date" 
+                        value={endDate} 
+                        onChange={(e) => setEndDate(e.target.value)}
+                        onBlur={handleSaveDates}
+                        className="w-full text-sm text-gray-900 dark:text-white bg-transparent border border-transparent hover:border-gray-200 dark:hover:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded p-1.5 -ml-1.5 transition-colors outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="mb-6">
@@ -226,6 +262,22 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
                     {task.description || "No description provided."}
                   </p>
+                  {(task.startDate || task.endDate) && (
+                    <div className="flex gap-4 mt-4 text-sm text-gray-500 dark:text-gray-400">
+                      {task.startDate && (
+                        <div>
+                          <span className="block text-xs font-medium mb-1">Start Date</span>
+                          {new Date(task.startDate).toLocaleDateString()}
+                        </div>
+                      )}
+                      {task.endDate && (
+                        <div>
+                          <span className="block text-xs font-medium mb-1">End Date</span>
+                          {new Date(task.endDate).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
