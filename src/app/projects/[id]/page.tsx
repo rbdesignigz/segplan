@@ -67,6 +67,8 @@ export default function ProjectOverviewPage({
   // Calculate Metrics
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
+  const todoTasks = tasks.filter(t => t.status === 'todo').length;
+  const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
   const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   
   const totalDocuments = documents.length;
@@ -109,7 +111,11 @@ export default function ProjectOverviewPage({
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
             </div>
             <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{totalTasks}</p>
-            <p className="text-xs text-gray-500 mt-2">{completedTasks} completed</p>
+            <div className="text-xs text-gray-500 mt-2 flex flex-wrap gap-x-3 gap-y-1">
+              <span className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>{todoTasks} to do</span>
+              <span className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>{inProgressTasks} in progress</span>
+              <span className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>{completedTasks} completed</span>
+            </div>
           </div>
 
           <div className="bg-gray-50 dark:bg-gray-700/50 p-5 rounded-lg border border-gray-100 dark:border-gray-600 flex flex-col justify-between">
