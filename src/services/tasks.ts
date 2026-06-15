@@ -1,6 +1,7 @@
 import { collection, addDoc, onSnapshot, query, where, orderBy, Timestamp, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../lib/firebase';
+import { logActivity } from './activities';
 
 export type TaskStatus = 'todo' | 'in_progress' | 'completed';
 
@@ -53,6 +54,7 @@ export const createTask = async (
   };
 
   const docRef = await addDoc(collection(db, 'tasks'), newTask);
+  await logActivity(projectId, uid, 'task_created', title, docRef.id);
   return docRef.id;
 };
 
@@ -72,9 +74,12 @@ export const subscribeToProjectTasks = (projectId: string, callback: (tasks: Tas
   });
 };
 
-export const updateTaskStatus = async (taskId: string, status: TaskStatus): Promise<void> => {
+export const updateTaskStatus = async (taskId: string, status: TaskStatus, projectId?: string, uid?: string, taskTitle?: string): Promise<void> => {
   const docRef = doc(db, 'tasks', taskId);
   await updateDoc(docRef, { status });
+  if (status === 'completed' && projectId && uid && taskTitle) {
+    await logActivity(projectId, uid, 'task_completed', taskTitle, taskId);
+  }
 };
 
 export const updateTaskDetails = async (taskId: string, title: string, description: string, color?: string): Promise<void> => {
@@ -148,9 +153,12 @@ export const deleteTaskAttachment = async (taskId: string, attachment: TaskAttac
   });
 };
 
-export const updateTaskAssignees = async (taskId: string, assigneeIds: string[]): Promise<void> => {
+export const updateTaskAssignees = async (taskId: string, assigneeIds: string[], projectId?: string, uid?: string, taskTitle?: string): Promise<void> => {
   const docRef = doc(db, 'tasks', taskId);
   await updateDoc(docRef, { assigneeIds });
+  if (projectId && uid && taskTitle) {
+    await logActivity(projectId, uid, 'task_assigned', taskTitle, taskId);
+  }
 };
 
 export const deleteTask = async (taskId: string): Promise<void> => {

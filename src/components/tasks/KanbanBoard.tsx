@@ -13,7 +13,7 @@ interface KanbanBoardProps {
 }
 
 export default function KanbanBoard({ projectId }: KanbanBoardProps) {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const isViewer = profile?.role === 'viewer';
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<Record<string, UserProfile>>({});
@@ -43,17 +43,17 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
     return () => unsubscribe();
   }, [projectId]);
 
-  const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
+  const handleStatusChange = async (task: Task, newStatus: Task['status']) => {
     try {
-      await updateTaskStatus(taskId, newStatus);
+      await updateTaskStatus(task.id, newStatus, projectId, user?.uid, task.title);
     } catch (error) {
       console.error("Failed to update task status", error);
     }
   };
 
-  const handleAssigneesChange = async (taskId: string, newAssigneeIds: string[]) => {
+  const handleAssigneesChange = async (task: Task, newAssigneeIds: string[]) => {
     try {
-      await updateTaskAssignees(taskId, newAssigneeIds);
+      await updateTaskAssignees(task.id, newAssigneeIds, projectId, user?.uid, task.title);
     } catch (error) {
       console.error("Failed to update task assignees", error);
     }
@@ -68,9 +68,10 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
     const taskId = e.dataTransfer.getData('taskId');
     // If the task exists and we are dropping it into a valid column, update it
     if (taskId) {
-      // Optimistic update isn't strictly necessary since Firebase onSnapshot is very fast,
-      // but we can just call handleStatusChange directly.
-      await handleStatusChange(taskId, newStatus);
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        await handleStatusChange(task, newStatus);
+      }
     }
   };
 
@@ -175,7 +176,7 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
                           taskId={task.id}
                           currentAssigneeIds={task.assigneeIds || []}
                           allUsers={users}
-                          onAssigneesChange={handleAssigneesChange}
+                          onAssigneesChange={(taskId, newIds) => handleAssigneesChange(task, newIds)}
                         >
                         <div className="flex -space-x-2 overflow-hidden items-center">
                           {(!task.assigneeIds || task.assigneeIds.length === 0) && (
@@ -208,7 +209,7 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
                       <div className="flex space-x-1">
                       {column.id !== 'todo' && (
                         <button 
-                          onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, column.id === 'completed' ? 'in_progress' : 'todo'); }}
+                          onClick={(e) => { e.stopPropagation(); handleStatusChange(task, column.id === 'completed' ? 'in_progress' : 'todo'); }}
                           className="text-gray-400 hover:text-blue-500 p-1"
                           title="Move Back"
                         >
@@ -217,7 +218,7 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
                       )}
                       {column.id !== 'completed' && (
                         <button 
-                          onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, column.id === 'todo' ? 'in_progress' : 'completed'); }}
+                          onClick={(e) => { e.stopPropagation(); handleStatusChange(task, column.id === 'todo' ? 'in_progress' : 'completed'); }}
                           className="text-gray-400 hover:text-blue-500 p-1"
                           title="Move Forward"
                         >

@@ -1,6 +1,7 @@
 import { collection, addDoc, onSnapshot, query, where, orderBy, Timestamp, doc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../lib/firebase';
+import { logActivity } from './activities';
 
 export interface ProjectDocument {
   id: string;
@@ -62,6 +63,7 @@ export const uploadDocument = async (
           };
 
           const docRef = await addDoc(collection(db, 'documents'), newDoc);
+          await logActivity(projectId, uid, 'document_uploaded', file.name, docRef.id);
           resolve(docRef.id);
         } catch (dbError) {
           reject(dbError);
