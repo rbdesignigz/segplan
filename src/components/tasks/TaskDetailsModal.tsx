@@ -14,7 +14,6 @@ interface TaskDetailsModalProps {
 export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsModalProps) {
   const { profile } = useAuth();
   const isViewer = profile?.role === 'viewer';
-  const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('default');
@@ -35,19 +34,27 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
       setColor(task.color || 'default');
       setChecklist(task.checklist || []);
       setNewItemText('');
-      setIsEditing(false);
     }
   }, [task, isOpen]);
 
   if (!isOpen || !task) return null;
 
   const handleSaveDetails = async () => {
+    if (title !== task.title || description !== task.description || color !== task.color) {
+      try {
+        await updateTaskDetails(task.id, title, description, color);
+      } catch (error) {
+        console.error("Failed to update task details", error);
+      }
+    }
+  };
+
+  const handleColorChange = async (newColor: string) => {
+    setColor(newColor);
     try {
-      await updateTaskDetails(task.id, title, description, color);
-      setIsEditing(false);
+      await updateTaskDetails(task.id, title, description, newColor);
     } catch (error) {
-      console.error("Failed to update task details", error);
-      alert("Error saving details");
+      console.error("Failed to update task color", error);
     }
   };
 
@@ -178,50 +185,37 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
 
           <div className="sm:flex sm:items-start">
             <div className="w-full mt-3 text-center sm:mt-0 sm:text-left">
-              {isEditing ? (
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-                    <input 
-                      type="text" 
-                      value={title} 
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm bg-white dark:bg-gray-700 border px-3 py-2 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                    <textarea 
-                      rows={4}
-                      value={description} 
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm bg-white dark:bg-gray-700 border px-3 py-2 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Card Color
-                    </label>
-                    <div className="flex flex-wrap gap-2">
+              {!isViewer ? (
+                <div className="mb-6 space-y-2">
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    onBlur={handleSaveDetails}
+                    className="w-full text-xl font-medium leading-6 text-gray-900 dark:text-white bg-transparent border border-transparent hover:border-gray-200 dark:hover:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded p-1 -ml-1 transition-colors outline-none"
+                    placeholder="Task Title"
+                  />
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onBlur={handleSaveDetails}
+                    rows={Math.max(2, description.split('\n').length)}
+                    className="w-full text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap bg-transparent border border-transparent hover:border-gray-200 dark:hover:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded p-1 -ml-1 resize-none transition-colors outline-none"
+                    placeholder="Add a description..."
+                  />
+                  <div className="flex items-center space-x-2 mt-2 ml-1">
+                    <div className="flex flex-wrap gap-1.5">
                       {PASTEL_COLORS.map(c => (
                         <button
                           key={c.id}
                           type="button"
-                          onClick={() => setColor(c.id)}
-                          className={`w-8 h-8 rounded-full border-2 transition-transform ${c.bg} ${color === c.id ? 'border-blue-500 scale-110' : 'border-transparent hover:scale-110'}`}
+                          onClick={() => handleColorChange(c.id)}
+                          className={`w-5 h-5 rounded-full border transition-transform ${c.bg} ${color === c.id ? 'border-blue-500 ring-2 ring-offset-1 ring-blue-500 scale-110 dark:ring-offset-gray-800' : 'border-gray-300 dark:border-gray-600 hover:scale-110'}`}
                           title={c.id}
                           aria-label={`Select ${c.id} color`}
                         />
                       ))}
                     </div>
-                  </div>
-                  <div className="flex space-x-3">
-                    <button onClick={handleSaveDetails} className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none">
-                      Save
-                    </button>
-                    <button onClick={() => setIsEditing(false)} className="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
-                      Cancel
-                    </button>
                   </div>
                 </div>
               ) : (
@@ -232,11 +226,6 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
                     {task.description || "No description provided."}
                   </p>
-                  {!isViewer && (
-                    <button onClick={() => setIsEditing(true)} className="mt-4 text-sm text-blue-600 hover:text-blue-500 font-medium">
-                      Edit Details
-                    </button>
-                  )}
                 </div>
               )}
 
