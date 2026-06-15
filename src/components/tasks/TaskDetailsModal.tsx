@@ -295,7 +295,7 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
                                 e.currentTarget.blur();
                               }
                             }}
-                            className={`w-full border-0 bg-transparent p-0 focus:ring-0 ${item.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-200'}`}
+                            className={`w-full border-0 bg-transparent px-1 py-0.5 focus:ring-0 focus:outline-none ${item.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-200'}`}
                           />
                         )}
                       </div>
@@ -323,8 +323,8 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
                       type="text"
                       value={newItemText}
                       onChange={(e) => setNewItemText(e.target.value)}
-                      placeholder="Add an item"
-                      className="block w-full border-0 border-b border-transparent bg-transparent focus:border-blue-500 focus:ring-0 sm:text-sm text-gray-900 dark:text-white placeholder-gray-500 px-0 py-1"
+                      placeholder="Agregar ítem"
+                      className="block w-full border-0 border-b border-transparent bg-transparent focus:border-blue-500 focus:ring-0 focus:outline-none sm:text-sm text-gray-900 dark:text-white placeholder-gray-500 px-2 py-1"
                     />
                   </form>
                 )}
