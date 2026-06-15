@@ -139,6 +139,15 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
                       </svg>
                     </div>
                   )}
+                  {isCompleted && !isViewer && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleStatusChange(task, 'in_progress'); }}
+                      className="absolute top-2 right-2 text-gray-400 hover:text-blue-500 p-1 block group-hover:hidden"
+                      title="Move back to In Progress"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                  )}
                   <strong className={`block font-bold text-gray-900 dark:text-white text-sm pr-6 ${isCompleted ? 'truncate mb-0 group-hover:whitespace-normal group-hover:mb-1' : 'mb-1'}`}>{task.title}</strong>
                   <p className={`text-gray-500 dark:text-gray-400 text-xs mb-2 line-clamp-2 ${isCompleted ? 'hidden group-hover:block' : ''}`}>{task.description}</p>
                   
