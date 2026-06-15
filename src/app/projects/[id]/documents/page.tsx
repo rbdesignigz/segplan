@@ -15,7 +15,7 @@ export default function ProjectDocumentsPage({
   const { profile } = useAuth();
 
   return (
-    <div className="space-y-6 px-2 sm:px-4 lg:px-6 py-4">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">

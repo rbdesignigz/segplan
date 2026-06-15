@@ -90,7 +90,7 @@ export default function ProjectOverviewPage({
   );
 
   return (
-    <div className="space-y-6 px-2 sm:px-4 lg:px-6 py-4">
+    <div className="space-y-6">
       {/* Overview Cards */}
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
         <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-4">

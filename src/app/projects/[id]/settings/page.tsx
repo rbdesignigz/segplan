@@ -135,7 +135,7 @@ export default function ProjectSettingsPage({
   }
 
   return (
-    <div className="space-y-6 px-2 sm:px-4 lg:px-6 py-4">
+    <div className="space-y-6">
       {/* Project Basic Settings */}
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
         <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-6">
