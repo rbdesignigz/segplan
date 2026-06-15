@@ -125,7 +125,7 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
                 return (
                 <div 
                   key={task.id} 
-                  className={`${colorClasses.bg} p-4 rounded shadow-sm border ${colorClasses.border} transition-shadow relative ${!isViewer ? 'hover:shadow-md cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
+                  className={`${colorClasses.bg} p-4 flex flex-col rounded shadow-sm border ${colorClasses.border} transition-shadow relative ${!isViewer ? 'hover:shadow-md cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
                   onClick={() => setSelectedTask(task)}
                   draggable={!isViewer}
                   onDragStart={(e) => !isViewer && handleDragStart(e, task.id)}
@@ -138,9 +138,20 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
                     </div>
                   )}
                   <strong className="block font-bold text-gray-900 dark:text-white text-sm mb-1 pr-6">{task.title}</strong>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs mb-3 line-clamp-2">{task.description}</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs mb-2 line-clamp-2">{task.description}</p>
                   
-                  <div className="flex items-center justify-between mt-4">
+                  {task.checklist && task.checklist.length > 0 && (
+                    <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mb-3" title="Checklist progress">
+                      <svg className={`w-4 h-4 mr-1 ${task.checklist.filter(i => i.completed).length === task.checklist.length ? 'text-green-500' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      <span className={task.checklist.filter(i => i.completed).length === task.checklist.length ? 'text-green-600 dark:text-green-400 font-medium' : ''}>
+                        {task.checklist.filter(i => i.completed).length} / {task.checklist.length}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between mt-auto pt-2">
                     <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
                       {isViewer ? (
                         <div className="flex -space-x-2 overflow-hidden items-center">

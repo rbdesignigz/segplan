@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Task, updateTaskDetails, uploadTaskAttachment, deleteTaskAttachment, TaskAttachment } from '../../services/tasks';
+import { Task, updateTaskDetails, uploadTaskAttachment, deleteTaskAttachment, TaskAttachment, TaskChecklistItem, updateTaskChecklist } from '../../services/tasks';
 import { useAuth } from '../../context/AuthContext';
 import { PASTEL_COLORS } from '../../utils/colors';
 
@@ -19,6 +19,9 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('default');
   
+  const [checklist, setChecklist] = useState<TaskChecklistItem[]>([]);
+  const [newItemText, setNewItemText] = useState('');
+  
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,6 +32,8 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
       setTitle(task.title);
       setDescription(task.description);
       setColor(task.color || 'default');
+      setChecklist(task.checklist || []);
+      setNewItemText('');
       setIsEditing(false);
     }
   }, [task, isOpen]);
@@ -43,6 +48,37 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
       console.error("Failed to update task details", error);
       alert("Error saving details");
     }
+  };
+
+  const handleAddChecklistItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newItemText.trim() || isViewer) return;
+    
+    const newItem: TaskChecklistItem = {
+      id: Date.now().toString(),
+      text: newItemText.trim(),
+      completed: false
+    };
+    const newChecklist = [...checklist, newItem];
+    setChecklist(newChecklist);
+    setNewItemText('');
+    await updateTaskChecklist(task.id, newChecklist);
+  };
+
+  const handleToggleChecklistItem = async (id: string) => {
+    if (isViewer) return;
+    const newChecklist = checklist.map(item => 
+      item.id === id ? { ...item, completed: !item.completed } : item
+    );
+    setChecklist(newChecklist);
+    await updateTaskChecklist(task.id, newChecklist);
+  };
+
+  const handleDeleteChecklistItem = async (id: string) => {
+    if (isViewer) return;
+    const newChecklist = checklist.filter(item => item.id !== id);
+    setChecklist(newChecklist);
+    await updateTaskChecklist(task.id, newChecklist);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,6 +190,62 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
                   )}
                 </div>
               )}
+
+              {/* Checklist Section */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2 flex items-center justify-between">
+                  Checklist
+                  <span className="text-xs text-gray-500 font-normal">
+                    {checklist.filter(i => i.completed).length} / {checklist.length}
+                  </span>
+                </h4>
+                <ul className="space-y-2 mb-3">
+                  {checklist.map(item => (
+                    <li key={item.id} className="flex items-start space-x-3 group">
+                      <div className="flex items-center h-5">
+                        <input
+                          type="checkbox"
+                          checked={item.completed}
+                          onChange={() => handleToggleChecklistItem(item.id)}
+                          disabled={isViewer}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0 text-sm">
+                        <span className={`block text-gray-900 dark:text-gray-200 ${item.completed ? 'line-through text-gray-400 dark:text-gray-500' : ''}`}>
+                          {item.text}
+                        </span>
+                      </div>
+                      {!isViewer && (
+                        <button
+                          onClick={() => handleDeleteChecklistItem(item.id)}
+                          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {!isViewer && (
+                  <form onSubmit={handleAddChecklistItem} className="flex items-center mt-2">
+                    <button type="submit" disabled={!newItemText.trim()} className="mr-2 text-gray-400 hover:text-blue-500 disabled:opacity-50">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                    <input
+                      type="text"
+                      value={newItemText}
+                      onChange={(e) => setNewItemText(e.target.value)}
+                      placeholder="Add an item"
+                      className="block w-full border-0 border-b border-transparent bg-transparent focus:border-blue-500 focus:ring-0 sm:text-sm text-gray-900 dark:text-white placeholder-gray-500 px-0 py-1"
+                    />
+                  </form>
+                )}
+              </div>
 
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div className="flex items-center justify-between mb-4">

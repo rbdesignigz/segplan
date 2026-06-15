@@ -13,6 +13,12 @@ export interface TaskAttachment {
   createdAt: string;
 }
 
+export interface TaskChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   projectId: string;
@@ -21,6 +27,7 @@ export interface Task {
   status: TaskStatus;
   assigneeIds: string[]; // Changed from assigneeId to an array
   color?: string; // Pastel background color
+  checklist?: TaskChecklistItem[];
   attachments?: TaskAttachment[];
   createdAt: string;
   createdBy: string;
@@ -75,6 +82,11 @@ export const updateTaskDetails = async (taskId: string, title: string, descripti
   const updates: any = { title, description };
   if (color) updates.color = color;
   await updateDoc(docRef, updates);
+};
+
+export const updateTaskChecklist = async (taskId: string, checklist: TaskChecklistItem[]): Promise<void> => {
+  const docRef = doc(db, 'tasks', taskId);
+  await updateDoc(docRef, { checklist });
 };
 
 export const uploadTaskAttachment = async (
