@@ -21,6 +21,7 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
   
   const [checklist, setChecklist] = useState<TaskChecklistItem[]>([]);
   const [newItemText, setNewItemText] = useState('');
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
   
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -80,6 +81,54 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
     setChecklist(newChecklist);
     await updateTaskChecklist(task.id, newChecklist);
   };
+
+  const handleEditChecklistItemText = async (id: string, newText: string) => {
+    if (isViewer) return;
+    const trimmed = newText.trim();
+    if (!trimmed) {
+      return handleDeleteChecklistItem(id);
+    }
+    const newChecklist = checklist.map(item => 
+      item.id === id ? { ...item, text: trimmed } : item
+    );
+    setChecklist(newChecklist);
+    await updateTaskChecklist(task.id, newChecklist);
+  };
+
+  const handleDragStart = (e: React.DragEvent<HTMLLIElement>, id: string) => {
+    setDraggedItemId(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLIElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLLIElement>, targetId: string) => {
+    e.preventDefault();
+    if (!draggedItemId || draggedItemId === targetId || isViewer) {
+      setDraggedItemId(null);
+      return;
+    }
+    
+    const oldIndex = checklist.findIndex(item => item.id === draggedItemId);
+    const newIndex = checklist.findIndex(item => item.id === targetId);
+    
+    if (oldIndex === -1 || newIndex === -1) {
+      setDraggedItemId(null);
+      return;
+    }
+    
+    const newChecklist = [...checklist];
+    const [movedItem] = newChecklist.splice(oldIndex, 1);
+    newChecklist.splice(newIndex, 0, movedItem);
+    
+    setChecklist(newChecklist);
+    setDraggedItemId(null);
+    await updateTaskChecklist(task.id, newChecklist);
+  };
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -201,7 +250,22 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
                 </h4>
                 <ul className="space-y-2 mb-3">
                   {checklist.map(item => (
-                    <li key={item.id} className="flex items-start space-x-3 group">
+                    <li 
+                      key={item.id} 
+                      className={`flex items-start space-x-3 group p-1 rounded transition-colors ${draggedItemId === item.id ? 'opacity-50' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                      draggable={!isViewer}
+                      onDragStart={(e) => !isViewer && handleDragStart(e, item.id)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => !isViewer && handleDrop(e, item.id)}
+                      onDragEnd={() => setDraggedItemId(null)}
+                    >
+                      {!isViewer && (
+                        <div className="flex items-center h-5 cursor-grab active:cursor-grabbing text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" title="Drag to reorder">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                          </svg>
+                        </div>
+                      )}
                       <div className="flex items-center h-5">
                         <input
                           type="checkbox"
@@ -212,9 +276,28 @@ export default function TaskDetailsModal({ task, isOpen, onClose }: TaskDetailsM
                         />
                       </div>
                       <div className="flex-1 min-w-0 text-sm">
-                        <span className={`block text-gray-900 dark:text-gray-200 ${item.completed ? 'line-through text-gray-400 dark:text-gray-500' : ''}`}>
-                          {item.text}
-                        </span>
+                        {isViewer ? (
+                          <span className={`block text-gray-900 dark:text-gray-200 ${item.completed ? 'line-through text-gray-400 dark:text-gray-500' : ''}`}>
+                            {item.text}
+                          </span>
+                        ) : (
+                          <input
+                            type="text"
+                            defaultValue={item.text}
+                            onBlur={(e) => {
+                              if (e.target.value !== item.text) {
+                                handleEditChecklistItemText(item.id, e.target.value);
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                e.currentTarget.blur();
+                              }
+                            }}
+                            className={`w-full border-0 bg-transparent p-0 focus:ring-0 ${item.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-200'}`}
+                          />
+                        )}
                       </div>
                       {!isViewer && (
                         <button
