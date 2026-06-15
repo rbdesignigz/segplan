@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Task } from '../../services/tasks';
 import { UserProfile } from '../../services/users';
 import { getTaskColorClasses } from '../../utils/colors';
@@ -20,6 +20,9 @@ export default function TaskListView({
   onTaskSelect, 
   onStatusChange 
 }: TaskListViewProps) {
+  const [sortField, setSortField] = useState<'title' | 'status' | 'startDate' | 'endDate'>('startDate');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [statusFilter, setStatusFilter] = useState<'all' | Task['status']>('all');
 
   const statusLabels: Record<Task['status'], string> = {
     'todo': 'To Do',
@@ -38,6 +41,53 @@ export default function TaskListView({
     return new Date(dateStr).toLocaleDateString();
   };
 
+  const handleSort = (field: 'title' | 'status' | 'startDate' | 'endDate') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return <svg className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-50 transition-opacity inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>;
+    }
+    return sortDirection === 'asc' 
+      ? <svg className="w-4 h-4 ml-1 text-blue-500 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" /></svg>
+      : <svg className="w-4 h-4 ml-1 text-blue-500 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>;
+  };
+
+  const filteredTasks = tasks.filter(task => {
+    if (statusFilter !== 'all' && task.status !== statusFilter) return false;
+    return true;
+  });
+
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    let aVal: string | number = '';
+    let bVal: string | number = '';
+
+    if (sortField === 'title') {
+      aVal = a.title.toLowerCase();
+      bVal = b.title.toLowerCase();
+    } else if (sortField === 'status') {
+      const order = { 'todo': 1, 'in_progress': 2, 'completed': 3 };
+      aVal = order[a.status];
+      bVal = order[b.status];
+    } else if (sortField === 'startDate') {
+      aVal = a.startDate || 'zzzzzz'; // Empty dates go to the bottom
+      bVal = b.startDate || 'zzzzzz';
+    } else if (sortField === 'endDate') {
+      aVal = a.endDate || 'zzzzzz';
+      bVal = b.endDate || 'zzzzzz';
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
   if (tasks.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-12 text-center text-gray-500 dark:text-gray-400">
@@ -47,30 +97,66 @@ export default function TaskListView({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-900/50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3">
-                Task
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Status
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Assignees
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Start Date
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                End Date
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {tasks.map((task) => {
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-2 justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status:</span>
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1.5"
+          >
+            <option value="all">All Statuses</option>
+            <option value="todo">To Do</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Showing {sortedTasks.length} tasks
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <tr>
+                <th 
+                  scope="col" 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3 cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => handleSort('title')}
+                >
+                  <div className="flex items-center">Task {renderSortIcon('title')}</div>
+                </th>
+                <th 
+                  scope="col" 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => handleSort('status')}
+                >
+                  <div className="flex items-center">Status {renderSortIcon('status')}</div>
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Assignees
+                </th>
+                <th 
+                  scope="col" 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => handleSort('startDate')}
+                >
+                  <div className="flex items-center">Start Date {renderSortIcon('startDate')}</div>
+                </th>
+                <th 
+                  scope="col" 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => handleSort('endDate')}
+                >
+                  <div className="flex items-center">End Date {renderSortIcon('endDate')}</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {sortedTasks.map((task) => {
               const colorClasses = getTaskColorClasses(task.color);
               
               return (
@@ -124,7 +210,13 @@ export default function TaskListView({
             })}
           </tbody>
         </table>
+        {sortedTasks.length === 0 && (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            No tasks match your current filter.
+          </div>
+        )}
       </div>
     </div>
+  </div>
   );
 }
