@@ -123,26 +123,27 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
             <div className="flex-1 space-y-3">
               {columnTasks.map(task => {
                 const colorClasses = getTaskColorClasses(task.color);
+                const isCompleted = column.id === 'completed';
                 return (
                 <div 
                   key={task.id} 
-                  className={`${colorClasses.bg} p-4 flex flex-col rounded shadow-sm border ${colorClasses.border} transition-shadow relative ${!isViewer ? 'hover:shadow-md cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
+                  className={`group ${colorClasses.bg} ${isCompleted ? 'p-3' : 'p-4'} flex flex-col rounded shadow-sm border ${colorClasses.border} transition-all duration-200 relative ${!isViewer ? 'hover:shadow-md cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
                   onClick={() => setSelectedTask(task)}
                   draggable={!isViewer}
                   onDragStart={(e) => !isViewer && handleDragStart(e, task.id)}
                 >
                   {task.attachments && task.attachments.length > 0 && (
-                    <div className="absolute top-3 right-3 text-gray-400" title={`${task.attachments.length} attachments`}>
+                    <div className={`absolute top-3 right-3 text-gray-400 ${isCompleted ? 'hidden group-hover:block' : ''}`} title={`${task.attachments.length} attachments`}>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                       </svg>
                     </div>
                   )}
-                  <strong className="block font-bold text-gray-900 dark:text-white text-sm mb-1 pr-6">{task.title}</strong>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs mb-2 line-clamp-2">{task.description}</p>
+                  <strong className={`block font-bold text-gray-900 dark:text-white text-sm pr-6 ${isCompleted ? 'truncate mb-0 group-hover:whitespace-normal group-hover:mb-1' : 'mb-1'}`}>{task.title}</strong>
+                  <p className={`text-gray-500 dark:text-gray-400 text-xs mb-2 line-clamp-2 ${isCompleted ? 'hidden group-hover:block' : ''}`}>{task.description}</p>
                   
                   {task.checklist && task.checklist.length > 0 && (
-                    <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 mb-3" title="Checklist progress">
+                    <div className={`flex items-center text-xs text-gray-600 dark:text-gray-300 mb-3 ${isCompleted ? 'hidden group-hover:flex' : ''}`} title="Checklist progress">
                       <svg className={`w-4 h-4 mr-1 ${task.checklist.filter(i => i.completed).length === task.checklist.length ? 'text-green-500' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                       </svg>
@@ -152,7 +153,7 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between mt-auto pt-2">
+                  <div className={`flex items-center justify-between mt-auto pt-2 ${isCompleted ? 'hidden group-hover:flex' : ''}`}>
                     <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
                       {isViewer ? (
                         <div className="flex -space-x-2 overflow-hidden items-center">
