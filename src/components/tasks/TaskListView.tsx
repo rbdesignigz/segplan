@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Task } from '../../services/tasks';
 import { UserProfile } from '../../services/users';
 import { getTaskColorClasses } from '../../utils/colors';
+import { useAuth } from '../../context/AuthContext';
 
 interface TaskListViewProps {
   projectId: string;
@@ -20,9 +21,11 @@ export default function TaskListView({
   onTaskSelect, 
   onStatusChange 
 }: TaskListViewProps) {
+  const { user } = useAuth();
   const [sortField, setSortField] = useState<'title' | 'status' | 'startDate' | 'endDate'>('startDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [statusFilter, setStatusFilter] = useState<'all' | Task['status']>('all');
+  const [assignedToMeOnly, setAssignedToMeOnly] = useState(false);
 
   const statusLabels: Record<Task['status'], string> = {
     'todo': 'To Do',
@@ -61,6 +64,7 @@ export default function TaskListView({
 
   const filteredTasks = tasks.filter(task => {
     if (statusFilter !== 'all' && task.status !== statusFilter) return false;
+    if (assignedToMeOnly && user && !(task.assigneeIds || []).includes(user.uid)) return false;
     return true;
   });
 
@@ -98,21 +102,35 @@ export default function TaskListView({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-2 justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status:</span>
-          <select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1.5"
-          >
-            <option value="all">All Statuses</option>
-            <option value="todo">To Do</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status:</span>
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1.5"
+            >
+              <option value="all">All Statuses</option>
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          
+          {user && (
+            <label className="flex items-center space-x-2 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                checked={assignedToMeOnly}
+                onChange={(e) => setAssignedToMeOnly(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Assigned to me</span>
+            </label>
+          )}
         </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
           Showing {sortedTasks.length} tasks
         </div>
       </div>
