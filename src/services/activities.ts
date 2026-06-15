@@ -59,5 +59,6 @@ export const subscribeToProjectActivities = (
     callback(activities);
   }, (error) => {
     console.error("Error subscribing to activities:", error);
+    callback([]); // Prevent infinite loading if index is missing
   });
 };
