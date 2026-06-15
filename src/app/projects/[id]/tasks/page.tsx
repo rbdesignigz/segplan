@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, use } from 'react';
-import KanbanBoard from '../../../../components/tasks/KanbanBoard';
+import TaskViewManager from '../../../../components/tasks/TaskViewManager';
 import CreateTaskModal from '../../../../components/tasks/CreateTaskModal';
 import { useAuth } from '../../../../context/AuthContext';
 
@@ -40,7 +40,7 @@ export default function ProjectTasksPage({
         )}
       </div>
 
-      <KanbanBoard projectId={projectId} />
+      <TaskViewManager projectId={projectId} />
 
       <CreateTaskModal 
         isOpen={isModalOpen} 
