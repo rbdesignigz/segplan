@@ -5,7 +5,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
-export type UserRole = 'admin' | 'manager' | 'contractor' | 'viewer' | 'pending';
+export type UserRole = 'admin' | 'manager' | 'contractor' | 'viewer' | 'pending' | 'disabled';
 
 interface UserProfile {
   uid: string;

@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from './Sidebar';
 import { useAuth } from '../../context/AuthContext';
+import { auth } from '../../lib/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,11 +16,18 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const isPublicRoute = publicRoutes.includes(pathname);
 
   useEffect(() => {
+    if (!loading && user && profile?.role === 'disabled') {
+      signOut(auth).then(() => {
+        router.push('/login?error=disabled');
+      });
+      return;
+    }
+
     if (!loading && !user && !isPublicRoute) {
       router.push('/login');
     } else if (!loading && user && profile?.role === 'pending' && pathname !== '/pending') {
       router.push('/pending');
-    } else if (!loading && user && profile && profile.role !== 'pending' && pathname === '/pending') {
+    } else if (!loading && user && profile && profile.role !== 'pending' && profile.role !== 'disabled' && pathname === '/pending') {
       router.push('/dashboard');
     }
   }, [user, profile, loading, isPublicRoute, pathname, router]);
